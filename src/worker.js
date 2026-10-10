@@ -1,3 +1,5 @@
+import { handleNetworkRequest } from './network.js';
+
 // Cloudflare Worker: KV short link subscription + access token protection
 // Requires:
 // - KV namespace binding: SUB_STORE
@@ -556,6 +558,10 @@ async function handleSub(url, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname.startsWith('/api/network/')) {
+      return handleNetworkRequest(request, env, url);
+    }
 
     if (request.method === 'OPTIONS') {
       return new Response(null, {

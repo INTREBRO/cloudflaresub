@@ -22,6 +22,40 @@
 - 相同输入自动去重（7 天 TTL）
 - 支持 `SUB_ACCESS_TOKEN` 访问令牌保护
 - 支持导出：Raw（Base64）/ Clash（YAML）/ Surge（文本）
+- 网络测速页 `/speed`：当前线路请求延迟、抖动、下载速率与本机历史记录
+
+## 网络测速（仅需 Cloudflare）
+
+首页点击“网络测速”，或直接访问 `/speed`。无需 VPS 或额外的 KV 绑定。
+
+1. 填写可选的线路备注，选择 4 / 16 / 64 MiB 下载流量上限。
+2. 点击“开始测速”，测量当前浏览器到本站 Cloudflare 接口的请求延迟和下载速率，可随时停止。
+3. 如需对比代理线路，在客户端切换节点并确认本站流量走该节点后再测一次。备注不会自动选择或验证节点。
+4. 最近 50 次结果只保存在当前浏览器，支持按延迟/下载排序、导出 CSV 和清空记录。中断的下载不参与速度比较。
+
+**测量含义：**先预热 1 次，再对 8 次 HTTPS 小请求取中位耗时；抖动是相邻成功请求耗时差的绝对值均值。请求失败率不是网络层丢包率，HTTPS 耗时也不是 ICMP Ping。下载预热 1 MiB 后，按实际字节数与墙钟时间计算短时单连接速度（Mbps，除以 8 为 MB/s）。流量上限包含预热有效载荷，不含协议开销；尽量测量 8 秒，先达到流量上限即结束，单个下载请求 20 秒超时。短时样本会提示复测。
+
+**范围限制：**这不是 LibreSpeed 移植或代理协议测速器。页面不能自动遍历 CSV IP、建立 VMess/VLESS/Trojan 连接，也不能单独测量 CDN 到源服务器延迟。若本站被分流为直连，切换代理节点不会改变本站测试线路。接入机房取自 Cloudflare `request.cf.colo`，不代表已识别代理，也不一定等于 Smart Placement 后的执行位置。
+
+### 部署与控制
+
+- 按本仓库原流程部署，保留现有 `SUB_STORE` 和 `SUB_ACCESS_TOKEN`。静态页面位于 `public/speed.html`，通过 Static Assets 提供 `/speed`；原配置的 `run_worker_first = ["/api/*", "/sub/*"]` 已覆盖新接口，不需要将所有静态资源都交给 Worker。
+- 设置环境变量 `NETWORK_TEST_ENABLED` 为字符串 `false` 可以关闭测速 API；静态页面仍可打开并显示接口不可用。
+- 新接口只接受同站 GET，拒绝带其他 Origin 或 `Sec-Fetch-Site: cross-site` 的浏览器请求，不开放跨域 CORS，也不请求任意外部 URL。
+- `GET /api/network/ping` 返回 `{ "ok": true, "colo": "..." }`；未知机房返回 `null`。
+- `GET /api/network/download?bytes=1048576` 返回随机字节，单请求上限 8 MiB，非法大小返回 400；关闭接口返回 404。
+- 响应禁用缓存/压缩，通过 `X-Network-Bytes` 告知预期字节数，客户端核验完整性；不依赖流式响应可能省略的 `Content-Length`。
+- 单次流量限制不等于站点总量限制。公开测速端点消耗 Worker 请求与运行资源，跨站检查不代替鉴权或限流；需要时在 Cloudflare 配置访问控制或速率限制。
+
+### 本地验证
+
+```bash
+npm ci
+npm run check
+npm run dev
+```
+
+本地地址通常为 `http://localhost:8787/speed`。本机运行结果只用于功能验证，真实网络速度应在部署后测量。上线后同时确认首页、原订阅生成和订阅链接仍可使用。
 
 ## 项目结构
 
