@@ -1,0 +1,8 @@
+/speed
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'
+  Referrer-Policy: same-origin
+  X-Content-Type-Options: nosniff
+/speed/
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'
+  Referrer-Policy: same-origin
+  X-Content-Type-Options: nosniff

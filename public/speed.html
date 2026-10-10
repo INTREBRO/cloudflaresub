@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>网络测速 · 优选 IP 订阅生成器</title>
+    <link rel="icon" href="/icons/auto.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/speed.css" />
+  </head>
+  <body>
+    <main>
+      <nav><span>优选 IP 订阅生成器</span><a href="/">返回订阅生成器</a></nav>
+      <h1>测一测当前线路</h1>
+      <p>
+        查看请求延迟与实际下载表现。切换客户端里的代理节点，再次测试，比较不同线路的结果。
+      </p>
+      <div class="route">
+        <b>你的浏览器</b><span>→ 当前实际网络线路 →</span
+        ><b>本站 Cloudflare 测速端</b>
+      </div>
+      <section class="surface" aria-label="测速控制与结果">
+        <div class="controls">
+          <label for="label"
+            >线路备注（手动填写）<input
+              id="label"
+              maxlength="80"
+              placeholder="例如：直连 / 香港节点 A" /></label
+          ><label for="budget"
+            >下载流量上限<select id="budget">
+              <option value="4">轻量 · 4 MiB</option>
+              <option value="16" selected>常规 · 16 MiB</option>
+              <option value="64">详细 · 64 MiB</option>
+            </select></label
+          >
+        </div>
+        <p class="note">
+          含 1 MiB
+          下载预热，不含协议开销。速度很快时可能提前达到流量上限；结果属于短时单连接测量。
+        </p>
+        <div class="buttons">
+          <button id="start">开始测速</button
+          ><button id="stop" class="secondary" disabled>停止</button>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <small>请求延迟 · 中位数</small><strong id="latency">—</strong
+            ><em>ms</em>
+          </div>
+          <div class="metric">
+            <small>请求抖动</small><strong id="jitter">—</strong><em>ms</em>
+          </div>
+          <div class="metric">
+            <small>平均下载速度</small><strong id="speed">—</strong
+            ><em>Mbps</em>
+          </div>
+          <div class="metric">
+            <small>请求失败率</small><strong id="failure">—</strong><em>%</em>
+          </div>
+        </div>
+        <progress
+          id="progress"
+          max="100"
+          value="0"
+          aria-label="测速进度"
+        ></progress>
+        <div id="status" role="status" aria-live="polite">准备就绪</div>
+        <div id="detail">测试只在点击“开始测速”后启动。</div>
+      </section>
+      <section class="history">
+        <div class="history-head">
+          <h2>本机测试记录</h2>
+          <label for="sort"
+            >排序<select id="sort">
+              <option value="time">最新优先</option>
+              <option value="latency">延迟从低到高</option>
+              <option value="speed">下载从高到低</option>
+            </select></label
+          >
+        </div>
+        <p class="note">
+          最多保存 50
+          次记录。备注由你填写，不代表已验证流量经过该节点；本站分流为直连时，测到的仍然是直连表现。
+        </p>
+        <p id="summary" class="tag"></p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>备注</th>
+                <th>时间</th>
+                <th>延迟 ms</th>
+                <th>抖动 ms</th>
+                <th>下载 Mbps</th>
+                <th>失败率</th>
+                <th>流量 MiB</th>
+                <th>接入机房</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="records"></tbody>
+          </table>
+        </div>
+        <p id="empty" class="empty">
+          暂无记录。完成一次测速后，结果会显示在这里。
+        </p>
+        <div class="buttons">
+          <button id="export" class="secondary" disabled>导出 CSV</button
+          ><button id="clear" class="secondary" disabled>清空本机记录</button>
+        </div>
+      </section>
+      <details>
+        <summary>这些数字代表什么？</summary>
+        <ul>
+          <li>
+            延迟是 8 次小型 HTTPS 请求的中位耗时（先预热 1
+            次）；含网络、浏览器和服务端处理时间，不是 ICMP Ping。
+          </li>
+          <li>
+            抖动是相邻成功请求耗时差的绝对值的平均数；失败率是 HTTP
+            请求失败比例，不是网络层丢包率。
+          </li>
+          <li>
+            下载采用本站返回的随机数据，禁用缓存与压缩，先预热再按实际接收字节和时间计算。1
+            MB/s = 8 Mbps；1 MiB = 1,048,576 字节。
+          </li>
+          <li>
+            每次尽量测量 8
+            秒，达到所选流量上限即结束。短时结果不能代表线路的长期带宽。
+          </li>
+          <li>接入机房来自本次请求的 Cloudflare 元数据；未知时不猜测。</li>
+          <li>
+            此页面不自动测试任意 IP，不连接 VMess/VLESS/Trojan 节点，也无法拆分
+            CDN 到源服务器的延迟。
+          </li>
+          <li>
+            测试请求由当前网站处理；历史记录只存在当前浏览器，可随时清空。
+          </li>
+        </ul>
+      </details>
+    </main>
+    <script type="module" src="/speed.js"></script>
+  </body>
+</html>
